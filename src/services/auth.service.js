@@ -1,10 +1,11 @@
 import createHttpError from "http-errors";
 import validator from "validator";
+import bcrypt from 'bcrypt';
 import { UserModel } from "../models/index.js";
 
 //env vars
 const { DEFAULT_PICTURE, DEFAULT_STATUS } = process.env;
-
+//Register method
 export const createUser = async (userData) => {
   const { name, email, picture, status, password } = userData;
   // Validate user input
@@ -24,7 +25,7 @@ export const createUser = async (userData) => {
     throw createHttpError.BadRequest("Please provide a valid email address");
   }
   // Check if user already exists
-  const existingUser = await UserModel.findOne(email);
+  const existingUser = await UserModel.findOne({email});
   if (existingUser) {
     throw createHttpError.Conflict("An account with this email already exists");
   }
@@ -35,15 +36,29 @@ export const createUser = async (userData) => {
     );
   }
   // Encrypt password -> to be done in the user model
-  const salt = await bcrypt.genSalt();
-  const hashedPassword = await bcrypt.hash(password, salt);
+  
   //adding user to mongo
   const user = await new UserModel({
     name,
     email,
     picture: picture || DEFAULT_PICTURE,
     status: status || DEFAULT_STATUS,
-    password: hashedPassword,
+    password,
   }).save();
   return user;
 };
+
+//Login method
+export const signUser = async (email, password) => {
+  const user = await UserModel.findOne({ email: email.toLowerCase()}).lean();
+  if (!user) {
+    throw createHttpError.NotFound("Invalid email or password");
+  }
+
+  //In case user exists - Compare password
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    throw createHttpError.NotFound("Invalid email or password");
+  }
+  return user;
+}

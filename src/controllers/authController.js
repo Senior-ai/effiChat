@@ -1,57 +1,129 @@
-import { createUser } from "../services/auth.service";
+import { createUser, signUser } from "../services/auth.service.js";
+import { generateToken, verifyToken } from "../services/token.service.js";
+import {findUser} from '../services/user.service.js'
+import createHttpError from 'http-errors';
 export const register = async (req, res, next) => {
-    try {
-        const { name, email, picture, status, password } = req.body;
+  try {
+    const { name, email, picture, status, password } = req.body;
 
-      // Create user in our database
-      const user = await createUser({
-        name,
-        email,
-        picture,
-        status,
-        password
-      });
-      
-      // Generate JWT
-      const token = jwt.sign(
-        {
-          userId: user._id,
-          email: user.email,
-        },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1d",
-        }
-      );
+    // Create user in our database
+    const user = await createUser({
+      name,
+      email,
+      picture,
+      status,
+      password,
+    });
 
-      // Send response
-      res.status(200)
-      res.json(user)
-    } catch (err) {
-        next(err);
-    }
-}
+    // Generate JWT
+    const access_token = await generateToken(
+      { userId: user._id },
+      "7d",
+      process.env.ACCESS_TOKEN_SECRET
+    );
+    const refresh_token = await generateToken(
+      { userId: user._id },
+      "30d",
+      process.env.REFRESH_TOKEN_SECRET
+    );
 
-export const login = async (req, res, next) => {
-    try {
-
+    // Send response
+    res.cookie("refreshToken", refresh_token, {
+      httpOnly: true,
+      path: "apiv1/auth/refreshtoken",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    }); //30days
+    res.status(200);
+    res.json({
+      message: "register success",
+      access_token: access_token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+        status: user.status,
+      },
+    });
   } catch (err) {
     next(err);
   }
-}
+};
 
-export const logout = async (req,res, next) => {
-    try {
+export const login = async (req, res, next) => {
+  try {
+    const {email, password} = req.body;
+    const user = await signUser(email, password);
+    // Generate JWT
+    const access_token = await generateToken(
+      { userId: user._id },
+      "7d",
+      process.env.ACCESS_TOKEN_SECRET
+    );
+    const refresh_token = await generateToken(
+      { userId: user._id },
+      "30d",
+      process.env.REFRESH_TOKEN_SECRET
+    );
 
-    } catch (err) { 
-        next(err);
-    }
-}
+    // Send response
+    res.cookie("refreshToken", refresh_token, {
+      httpOnly: true,
+      path: "apiv1/auth/refreshtoken",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    }); //30days
+    res.status(200);
+    res.json({
+      message: "login success",
+      access_token: access_token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+        status: user.status,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
-export const refreshToken = async (req,res, next) => {
-    try {
+export const logout = async (req, res, next) => {
+  try {
+    res.clearCookie("refreshToken", {path: "apiv1/auth/refreshtoken"});
+    res.status(200).json({
+      message: "Logout success"
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
-    } catch (err) { 
-        next(err);
-    }
-}
+export const refreshToken = async (req, res, next) => {
+  try {
+    const refresh_token = req.cookies.refreshToken;
+    if (!refresh_token) throw createHttpError.Unauthorized("Please login");
+    const check = await verifyToken(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+    const user = await findUser(check.userId);
+
+    const access_token = await generateToken(
+      { userId: user._id },
+      "7d",
+      process.env.ACCESS_TOKEN_SECRET
+    );
+
+    res.json({
+      access_token: access_token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+        status: user.status,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
