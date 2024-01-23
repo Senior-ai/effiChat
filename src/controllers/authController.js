@@ -5,7 +5,6 @@ import createHttpError from 'http-errors';
 export const register = async (req, res, next) => {
   try {
     const { name, email, picture, status, password } = req.body;
-
     // Create user in our database
     const user = await createUser({
       name,
