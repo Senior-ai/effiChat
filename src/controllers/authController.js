@@ -2,6 +2,7 @@ import { createUser, signUser } from "../services/auth.service.js";
 import { generateToken, verifyToken } from "../services/token.service.js";
 import {findUser} from '../services/user.service.js'
 import createHttpError from 'http-errors';
+
 export const register = async (req, res, next) => {
   try {
     const { name, email, picture, status, password } = req.body;
