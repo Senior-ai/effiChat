@@ -5,6 +5,7 @@ import { UserModel } from "../models/index.js";
 
 //env vars
 const { DEFAULT_PICTURE, DEFAULT_STATUS } = process.env;
+
 //Register method
 export const createUser = async (userData) => {
   const { name, email, picture, status, password } = userData;
@@ -59,6 +60,23 @@ export const signUser = async (email, password) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     throw createHttpError.NotFound("Invalid email or password");
+  }
+  return user;
+}
+
+//ChangePassword method
+export const changePass = async (userId, pass) => {
+  if (!validator.isLength(pass, { min: 6, max: 48 })) {
+    throw createHttpError.BadRequest(
+      "Password must be between 6 to 48 characters"
+    );
+  }
+  const salt = await bcrypt.genSalt(12);
+  const hashedPassword = await bcrypt.hash(pass, salt);
+  pass = hashedPassword;
+  const user = await UserModel.findByIdAndUpdate(userId, {password: pass});
+  if (!user) {
+    throw createHttpError.NotFound("Oops! something went wrong");
   }
   return user;
 }

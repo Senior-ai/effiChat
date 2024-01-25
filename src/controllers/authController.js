@@ -1,4 +1,4 @@
-import { createUser, signUser } from "../services/auth.service.js";
+import { createUser, signUser, changePass } from "../services/auth.service.js";
 import { generateToken, verifyToken } from "../services/token.service.js";
 import {findUser} from '../services/user.service.js'
 import createHttpError from 'http-errors';
@@ -99,6 +99,18 @@ export const logout = async (req, res, next) => {
     next(err);
   }
 };
+ 
+export const changePassword = async (req, res, next) => {
+  try {
+    const {password, userId} = req.body;
+    let user = await changePass(userId, password);
+    res.status(200).json({
+      message: 'Password changed successfully'
+    })
+   } catch (err) {
+    next(err);
+  }
+}
 
 export const refreshToken = async (req, res, next) => {
   try {

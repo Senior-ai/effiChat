@@ -1,6 +1,7 @@
 import logger from "../configs/logger.js";
 import {populateMessage, createMessage, getConvoMessages} from './../services/message.service.js';
 import {updateLatestMessage} from './../services/conversation.service.js'
+
 export const sendMessage = async (req, res, next) => {
     try {
         const userId = req.user.userId;

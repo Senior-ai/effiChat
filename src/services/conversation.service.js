@@ -62,5 +62,5 @@ export const updateLatestMessage = async (convoId, msg) => {
     if (!updatedConvo) {
       throw createHttpError.BadRequest('Oops. something went wrong!');
     }
-    return updatedConvo
+    return updatedConvo //No one receives it - but it might be useful for future purposes.
 }
