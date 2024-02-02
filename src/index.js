@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import app from './app.js';
 import logger from './configs/logger.js';
-
+import {Server} from 'socket.io';
 //env vars
 const { DATABASE_URL} = process.env;
 const PORT = process.env.PORT || 8000;
@@ -25,9 +25,20 @@ let server;
 
 server = app.listen(PORT, () => {
     logger.info(`Server listening on port ${PORT}`);
-    console.log(`process id: ${process.pid}`);
+    // console.log(`process id: ${process.pid}`);
 });
 
+//socket io
+const io = new Server(server, {
+    pingTimeout: 60000,
+    cors: {
+        origin: process.env.CLIENT_ENDPOINT,
+    }
+});
+
+io.on('connection', (socket) => {
+    logger.info('Socket.io Connected successfully')
+})
 
 //handling uncaught errors
 const exitHandler = () => {
