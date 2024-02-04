@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import app from './app.js';
 import logger from './configs/logger.js';
 import {Server} from 'socket.io';
+import SocketServer from './SocketServer.js';
+
 //env vars
 const { DATABASE_URL} = process.env;
 const PORT = process.env.PORT || 8000;
@@ -38,6 +40,7 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
     logger.info('Socket.io Connected successfully')
+    SocketServer(socket, io);
 })
 
 //handling uncaught errors
