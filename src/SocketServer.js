@@ -24,7 +24,8 @@ export default function (socket, io) {
 
     //Send and receive message
     socket.on('send message', (message) => {
-        let conversation = message.conversation;
+        let conversation = message?.conversation;
+        console.log(message)
         if (!conversation.users) return;
         conversation.users.forEach((user) => {
             if (user._id === message.sender._id) return;
