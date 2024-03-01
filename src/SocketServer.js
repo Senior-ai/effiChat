@@ -8,6 +8,8 @@ export default function (socket, io) {
           onlineUsers.push({userId: user, socketId: socket.id});
         }
         io.emit('getOnlineUsers', onlineUsers);
+        // Send socket id
+        io.emit('setupSocket', socket.id);
     });
 
     //socket disconnect
@@ -39,5 +41,17 @@ export default function (socket, io) {
     
     socket.on('stop typing', (conversation) => {
         socket.in(conversation).emit('stop typing', conversation);
+    })
+
+    //Call
+    socket.on('callUser', (data) => {
+        let userId = data.userToCall;
+        let userSocketId = onlineUsers.find((user) => user.userId === userId);
+        io.to(userSocketId.socketId).emit('callUser', {
+            signal: data.signal,
+            from: data.from,
+            name: data.name,
+            picture: data.picture
+        });
     })
 }
