@@ -31,5 +31,9 @@
     "socket.io": "^4.7.4",
     "trim-request": "^1.0.6",
     "winston": "^3.11.0"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.8",
+    "utf-8-validate": "^5.0.10"
   }
 }

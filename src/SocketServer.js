@@ -1,8 +1,10 @@
+import logger from './configs/logger.js';
 //not an actual server but you get the point. Maybe I should rename it SocketService instead
 let onlineUsers = [];
 export default function (socket, io) {
     //user joins or opens the conversation
     socket.on('join', (user) => {
+        logger.info('User joined', user);
         socket.join(user);
         if (!onlineUsers.some((u) => u.userId === user)) {
           onlineUsers.push({userId: user, socketId: socket.id});

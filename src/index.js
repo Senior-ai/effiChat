@@ -27,7 +27,6 @@ let server;
 
 server = app.listen(PORT, () => {
     logger.info(`Server listening on port ${PORT}`);
-    // console.log(`process id: ${process.pid}`);
 });
 
 //socket io
@@ -35,10 +34,11 @@ const io = new Server(server, {
     pingTimeout: 60000,
     cors: {
         origin: process.env.CLIENT_ENDPOINT,
-    }
+    },
 });
 
 io.on('connection', (socket) => {
+    console.log(`socket ${socket.id} connected`);
     logger.info('Socket.io Connected successfully')
     SocketServer(socket, io);
 })
