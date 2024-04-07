@@ -1,7 +1,7 @@
 import { createUser, signUser, changePass } from "../services/auth.service.js";
 import { generateToken, verifyToken } from "../services/token.service.js";
-import {findUser} from '../services/user.service.js'
-import createHttpError from 'http-errors';
+import { findUser } from "../services/user.service.js";
+import createHttpError from "http-errors";
 
 export const register = async (req, res, next) => {
   try {
@@ -42,7 +42,7 @@ export const register = async (req, res, next) => {
         email: user.email,
         picture: user.picture,
         status: user.status,
-        token: access_token
+        token: access_token,
       },
     });
   } catch (err) {
@@ -52,7 +52,7 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
     const user = await signUser(email, password);
     // Generate JWT
     const access_token = await generateToken(
@@ -81,7 +81,7 @@ export const login = async (req, res, next) => {
         email: user.email,
         picture: user.picture,
         status: user.status,
-        token: access_token
+        token: access_token,
       },
     });
   } catch (err) {
@@ -91,32 +91,36 @@ export const login = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.clearCookie("refreshToken", {path: "apiv1/auth/refreshtoken"});
+    res.clearCookie("refreshToken", { path: "apiv1/auth/refreshtoken" });
     res.status(200).json({
-      message: "Logout success"
+      message: "Logout success",
     });
   } catch (err) {
     next(err);
   }
 };
- 
+//TODO - Test after fligh and commit accordingly
 export const changePassword = async (req, res, next) => {
   try {
-    const {password, userId} = req.body;
-    let user = await changePass(userId, password);
+    const { password, email } = req.body;
+    let user = await changePass(email, password);
     res.status(200).json({
-      message: 'Password changed successfully'
-    })
-   } catch (err) {
+      message: "Password changed successfully",
+      user: user,
+    });
+  } catch (err) {
     next(err);
   }
-}
+};
 
 export const refreshToken = async (req, res, next) => {
   try {
     const refresh_token = req.cookies.refreshToken;
     if (!refresh_token) throw createHttpError.Unauthorized("Please login");
-    const check = await verifyToken(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+    const check = await verifyToken(
+      refresh_token,
+      process.env.REFRESH_TOKEN_SECRET
+    );
     const user = await findUser(check.userId);
 
     const access_token = await generateToken(
@@ -132,7 +136,7 @@ export const refreshToken = async (req, res, next) => {
         email: user.email,
         picture: user.picture,
         status: user.status,
-        token: access_token
+        token: access_token,
       },
     });
   } catch (err) {

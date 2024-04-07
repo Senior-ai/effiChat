@@ -1,6 +1,6 @@
 import createHttpError from "http-errors";
 import validator from "validator";
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 import { UserModel } from "../models/index.js";
 
 //env vars
@@ -26,7 +26,7 @@ export const createUser = async (userData) => {
     throw createHttpError.BadRequest("Please provide a valid email address");
   }
   // Check if user already exists
-  const existingUser = await UserModel.findOne({email});
+  const existingUser = await UserModel.findOne({ email });
   if (existingUser) {
     throw createHttpError.Conflict("An account with this email already exists");
   }
@@ -37,7 +37,7 @@ export const createUser = async (userData) => {
     );
   }
   // Encrypt password -> to be done in the user model
-  
+
   //adding user to mongo
   const user = await new UserModel({
     name,
@@ -51,7 +51,7 @@ export const createUser = async (userData) => {
 
 //Login method
 export const signUser = async (email, password) => {
-  const user = await UserModel.findOne({ email: email.toLowerCase()}).lean();
+  const user = await UserModel.findOne({ email: email.toLowerCase() }).lean();
   if (!user) {
     throw createHttpError.NotFound("Invalid email or password");
   }
@@ -62,10 +62,11 @@ export const signUser = async (email, password) => {
     throw createHttpError.NotFound("Invalid email or password");
   }
   return user;
-}
+};
 
 //ChangePassword method
-export const changePass = async (userId, pass) => {
+
+export const changePass = async (email, userId, pass) => {
   if (!validator.isLength(pass, { min: 6, max: 48 })) {
     throw createHttpError.BadRequest(
       "Password must be between 6 to 48 characters"
@@ -74,9 +75,12 @@ export const changePass = async (userId, pass) => {
   const salt = await bcrypt.genSalt(12);
   const hashedPassword = await bcrypt.hash(pass, salt);
   pass = hashedPassword;
-  const user = await UserModel.findByIdAndUpdate(userId, {password: pass});
+  const user = await UserModel.findOneAndUpdate(
+    { email: email.toLowerCase() },
+    { password: pass }
+  );
   if (!user) {
     throw createHttpError.NotFound("Oops! something went wrong");
   }
   return user;
-}
+};
